@@ -1,24 +1,42 @@
-import { Produto as ProdutoType } from '../../App'
+import React from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { RootState } from '../../store'
 import * as S from './styles'
+import { Produto as ProdutoType, paraReal } from '../Produto/Produto'
+import { adicionarItem } from '../../store/reducers/carrinho'
+import {
+  adicionarFavorito,
+  removerFavorito
+} from '../../store/reducers/favoritosSlice'
 
 type Props = {
   produto: ProdutoType
-  aoComprar: (produto: ProdutoType) => void
-  favoritar: (produto: ProdutoType) => void
-  estaNosFavoritos: boolean
 }
 
-export const paraReal = (valor: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    valor
-  )
+const ProdutoComponent = ({ produto }: Props) => {
+  const dispatch = useDispatch()
+  const favoritos = useSelector((state: RootState) => state.favoritos.itens)
+  const carrinho = useSelector((state: RootState) => state.carrinho.itens)
 
-const ProdutoComponent = ({
-  produto,
-  aoComprar,
-  favoritar,
-  estaNosFavoritos
-}: Props) => {
+  const estaNosFavoritos = favoritos.some((item) => item.id === produto.id)
+  const estaNoCarrinho = carrinho.some((item) => item.id === produto.id)
+
+  const toggleFavorito = () => {
+    if (estaNosFavoritos) {
+      dispatch(removerFavorito(produto.id))
+    } else {
+      dispatch(adicionarFavorito(produto))
+    }
+  }
+
+  const adicionarAoCarrinho = () => {
+    if (estaNoCarrinho) {
+      alert('Este produto já está no carrinho!')
+    } else {
+      dispatch(adicionarItem(produto))
+    }
+  }
+
   return (
     <S.Produto>
       <S.Capa>
@@ -28,13 +46,13 @@ const ProdutoComponent = ({
       <S.Prices>
         <strong>{paraReal(produto.preco)}</strong>
       </S.Prices>
-      <S.BtnComprar onClick={() => favoritar(produto)} type="button">
+      <S.BtnComprar onClick={toggleFavorito} type="button">
         {estaNosFavoritos
-          ? '- Remover dos favoritos'
-          : '+ Adicionar aos favoritos'}
+          ? '-Remover dos favoritos'
+          : '+Adicionar aos favoritos'}
       </S.BtnComprar>
-      <S.BtnComprar onClick={() => aoComprar(produto)} type="button">
-        Adicionar ao carrinho
+      <S.BtnComprar onClick={adicionarAoCarrinho} type="button">
+        {estaNoCarrinho ? 'No carrinho' : 'Adicionar ao carrinho'}
       </S.BtnComprar>
     </S.Produto>
   )
